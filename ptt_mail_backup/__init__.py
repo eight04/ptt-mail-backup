@@ -179,10 +179,12 @@ class Article:
         for col_no, char in enumerate(line.chars, line.col_no):
             self.draw_char(line.line_no, col_no, char)
         
-    def add_screen(self, lines):
+    def add_screen(self, lines, skip_line=None):
         screen = ArticleScreen(lines)
         assert screen.line_start <= len(self.lines)
         for line in screen.lines:
+            if skip_line and skip_line(line):
+                continue
             self.draw_line(line)
         return screen
         
@@ -377,6 +379,8 @@ class PTTBot:
             
             indent = 0
             while any(line.right_truncated for line in screen.lines):
+                truncated_lines = set(line.line_no for line in screen.lines if line.right_truncated)
+            
                 log.info("has truncated right")
                 indent += 1
                 self.send(">")
@@ -386,7 +390,10 @@ class PTTBot:
                 else:
                     next_col = screen.col_start + 8
                 self.unt(self.on_col(next_col))
-                screen = article.add_screen(self.lines(raw=True))
+                screen = article.add_screen(
+                    self.lines(raw=True),
+                    skip_line=lambda line: line.line_no not in truncated_lines
+                )
                 log.info("move right to col %s", screen.col_start)
                 # if screen.col_start == 136:
                     # set_trace()
@@ -428,11 +435,11 @@ def main():
         "--dest", default=".", help="save to dest. Default to current dir."
     )
     parser.add_argument(
-        "--verbose", action="store_true", help="print verbose message."
+        "--verbose", "-v", action="store_true", help="print verbose message."
     )
     range_group = parser.add_mutually_exclusive_group(required=True)
     range_group.add_argument(
-        "--range", nargs=2, type=int, metavar=("START", "END"),
+        "--range", "-r", nargs=2, type=int, metavar=("START", "END"),
         help="specify a range (inclusive). Negative values and zeros are "
              "allowed, they are treated as (last_index + value) i.e. --range 0 "
              "0 would download the last mail."
