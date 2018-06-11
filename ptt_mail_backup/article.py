@@ -1,7 +1,10 @@
 import re
 import collections
+import uao
 
 from .ansi import chars_to_bytes
+
+uao.register_uao()
 
 RX_FOOT = re.compile(r"(?:(\d+)~(\d+)\s*欄.+?)?(\d+)~(\d+)\s*行".encode("big5-uao"))
 

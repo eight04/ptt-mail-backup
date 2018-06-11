@@ -4,12 +4,15 @@ import re
 from contextlib import contextmanager
 from getpass import getpass
 
+import uao
 from paramiko.client import SSHClient, AutoAddPolicy
 
 from .byte_screen import ByteScreen
 from .byte_stream import ByteStream
 from .ansi import chars_to_bytes
 from .article import match_foot, Article
+
+uao.register_uao
 
 log = logging.getLogger(__name__)
 
@@ -65,8 +68,13 @@ class PTTBot:
             else:
                 self.send("s\r{}\r".format(int(result)))
         
-    def __exit__(self, *args):
+    def __exit__(self, exc_type, ext_value, ext_traceback):
         self.client.close()
+        if ext_value:
+            log.info(
+                "uncaught error, here is the last screen:\n%s",
+                "\n".join(line.decode("big5-uao").rstrip() for line in self.lines())
+            )
     
     def unt(self, needle, on_data=None):
         if callable(needle):
@@ -149,9 +157,15 @@ class PTTBot:
         """Update article config. It is hard to work with articles containing
         long lines (column > 80).
         """
+        log.info("update pmore config")
         self.article_configured = True
-        self.send("owml ")
+        self.send("o")
+        self.unt(self.on_pmore_conf)
+        self.send("wmlq")
         self.unt(self.on_col(0))
+        
+    def on_pmore_conf(self, _data):
+        return "piaip's more: pmore 2007+ 設定選項".encode("big5-uao") in self.get_line(-9)
         
     def on_col(self, col_no):
         def callback(_data):
@@ -171,6 +185,7 @@ class PTTBot:
                 self.send("n")
                 is_animated = True
         self.unt(self.on_col(0), on_data=handle_animated)
+        log.info("enter the article. is_animated=%s", is_animated)
         
         if is_animated:
             self.send("hq")

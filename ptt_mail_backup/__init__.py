@@ -2,15 +2,9 @@ import argparse
 import logging
 import pathlib
 
-import uao
-
 from .ptt_bot import PTTBot
 
 __version__ = "0.0.0"
-
-uao.register_uao()
-
-# log = logging.getLogger(__name__)
 
 def main():
     parser = argparse.ArgumentParser(description="Backup PTT mail.")
