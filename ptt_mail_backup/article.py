@@ -67,7 +67,10 @@ class ArticleScreen:
         
 class Article:
     """Article composer. Compose multiple screens into an article."""
-    def __init__(self):
+    def __init__(self, date, sender, title):
+        self.date = date
+        self.sender = sender
+        self.title = title
         self.lines = []
         
     def draw_char(self, line_no, col_no, char):

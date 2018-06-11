@@ -175,7 +175,18 @@ class PTTBot:
         
     def get_article(self, index):
         log.info("get %sth article", index)
-        self.send(str(index) + "\r\r")
+        self.send(str(index))
+        self.unt("跳至第幾項")
+        self.send("\r")
+        self.unt(lambda _data: "跳至第幾項".encode("big5-uao") not in self.get_line(-1))
+        curr_line = self.get_line(self.screen.cursor.y)
+        date, sender, title = (
+            t.decode("big5-uao").strip()
+            for t in (curr_line[9:14], curr_line[15:30], curr_line[30:])
+        )
+        article = Article(date, sender, title)
+        
+        self.send(str(index) + "\r")
         
         is_animated = False
         def handle_animated(data):
@@ -196,9 +207,6 @@ class PTTBot:
             self.update_article_config()
             
         log.info("start collecting body")
-        
-        article = Article()
-        # rx_last_page = re.compile(r"瀏覽.+?\(100%\)".encode("big5-uao"))
         while True:
             screen = article.add_screen(self.lines(raw=True))
             log.info("add screen %s~%s", screen.line_start, screen.line_end)

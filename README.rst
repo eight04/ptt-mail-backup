@@ -55,6 +55,6 @@ Usage
 Changelog
 ---------
 
-* 0.1.0 (Jun 12, 2018)
+* 0.1.0 (Next)
 
   - First release.
