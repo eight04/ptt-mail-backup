@@ -4,7 +4,7 @@ ptt-mail-backup
 .. image:: https://travis-ci.org/eight04/ptt-mail-backup.svg?branch=master
     :target: https://travis-ci.org/eight04/ptt-mail-backup
 
-備份 PTT 站內信。不會再因為站內信打包失敗而把信箱塞爆一整個禮拜。
+一個用來備份 PTT 站內信的 CLI 工具。不會再因為站內信打包失敗而把信箱塞爆一整個禮拜。
 
 Features
 --------
@@ -25,34 +25,33 @@ From `PYPI <https://pypi.org/project/ptt-mail-backup/>`__:
 Usage
 -----
 
-執行 `ptt-mail-backup -h`::
+執行 ``ptt-mail-backup ...``::
 
-  usage: ptt-mail-backup [-h] [--user USER] [--pass PASSWORD] [--dest DEST]
-                         [--verbose] [--filename-format FILENAME_FORMAT]
-                         (--range START END | --all)
+  usage: ptt-mail-backup [-h] [-u USER] [-p PASSWORD] [-d DEST] [-v]
+                         [-f FILENAME_FORMAT] (-r START END | --all)
 
   Backup PTT mail.
 
   optional arguments:
     -h, --help            show this help message and exit
-    --user USER           username, otherwise prompt for the value.
-    --pass PASSWORD       password, otherwise prompt for the value.
-    --dest DEST, -d DEST  save to dest. Default: '.'
-    --verbose, -v         print verbose message.
-    --filename-format FILENAME_FORMAT
+    -u USER, --user USER  username, otherwise prompt for the value.
+    -p PASSWORD, --pass PASSWORD
+                          password, otherwise prompt for the value.
+    -d DEST, --dest DEST  save to dest. Default: '.'
+    -v, --verbose         print verbose message.
+    -f FILENAME_FORMAT, --filename-format FILENAME_FORMAT
                           filename format. Default: '{index}. [{board}] {title}
                           [{author}] ({time:%Y%m%d%H%M%S}).ans'
-    --range START END, -r START END
+    -r START END, --range START END
                           specify a range (inclusive). Negative values and zeros
                           are allowed, they are treated as (last_index + value)
                           i.e. --range 0 0 would download the last mail.
     --all                 download all
-    
-或是 `python -m ptt_mail_backup`
 
+或是 ``python -m ptt_mail_backup ...``。
 
-Example
--------
+範例
+~~~~
 
 下載所有信件到 2018-06-12 資料夾::
 
@@ -64,7 +63,7 @@ Example
   
 從 CLI 傳入使用者名稱、密碼，並下載最舊的信件::
 
-  ptt-mail-backup --user myusername --pass mypassword -r 1 1
+  ptt-mail-backup -u myusername -p mypassword -r 1 1
       
 Changelog
 ---------

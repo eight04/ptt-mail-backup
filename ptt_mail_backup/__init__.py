@@ -32,25 +32,25 @@ class DummyDir(DIR):
 def main():
     parser = argparse.ArgumentParser(description="Backup PTT mail.")
     parser.add_argument(
-        "--user", help="username, otherwise prompt for the value."
+        "-u", "--user", help="username, otherwise prompt for the value."
     )
     parser.add_argument(
-        "--pass", dest="password", help="password, otherwise prompt for the value."
+        "-p", "--pass", dest="password", help="password, otherwise prompt for the value."
     )
     parser.add_argument(
-        "--dest", "-d", default=".", help="save to dest. Default: %(default)r"
+        "-d", "--dest", default=".", help="save to dest. Default: %(default)r"
     )
     parser.add_argument(
-        "--verbose", "-v", action="store_true", help="print verbose message."
+        "-v", "--verbose", action="store_true", help="print verbose message."
     )
     parser.add_argument(
-        "--filename-format",
+        "-f", "--filename-format",
         default="{index}. [{board}] {title} [{author}] ({time:%Y%m%d%H%M%S}).ans",
         help="filename format. Default: %(default)r"
     )
     range_group = parser.add_mutually_exclusive_group(required=True)
     range_group.add_argument(
-        "--range", "-r", nargs=2, type=int, metavar=("START", "END"),
+        "-r", "--range", nargs=2, type=int, metavar=("START", "END"),
         help="specify a range (inclusive). Negative values and zeros are "
              "allowed, they are treated as (last_index + value) i.e. --range 0 "
              "0 would download the last mail."
