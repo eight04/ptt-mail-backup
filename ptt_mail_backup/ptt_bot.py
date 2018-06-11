@@ -184,9 +184,17 @@ class PTTBot:
             t.decode("big5-uao").strip()
             for t in (curr_line[9:14], curr_line[15:30], curr_line[30:])
         )
+        if title.startswith("轉"):
+            title = "Fw:" + title[1:]
+        elif title.startswith("◇"):
+            title = title[2:]
+        elif title.startswith("R:"):
+            title = "Re:" + title[2:]
+        
+        log.info("title: %s", title)
         article = Article(date, sender, title)
         
-        self.send(str(index) + "\r")
+        self.send("\r")
         
         is_animated = False
         def handle_animated(data):

@@ -38,7 +38,7 @@ def main():
         "--pass", dest="password", help="password, otherwise prompt for the value."
     )
     parser.add_argument(
-        "--dest", "-d", default=".", help="save to dest. Default: '.'"
+        "--dest", "-d", default=".", help="save to dest. Default: %(default)r"
     )
     parser.add_argument(
         "--verbose", "-v", action="store_true", help="print verbose message."
@@ -46,8 +46,7 @@ def main():
     parser.add_argument(
         "--filename-format",
         default="{index}. [{board}] {title} [{author}] ({time:%Y%m%d%H%M%S}).ans",
-        help="filename format. Default: '{index}. [{board}] {title} [{author}] "
-             "({time:%Y%m%d%H%M%S}).ans'"
+        help="filename format. Default: %(default)r"
     )
     range_group = parser.add_mutually_exclusive_group(required=True)
     range_group.add_argument(
@@ -83,7 +82,8 @@ def main():
             for i in range(start, end + 1):
                 print("Fetching mail: {}".format(i))
                 article = bot.get_article(i)
-                article_parser = ArticleParser(article.to_bytes())
+                content = article.to_bytes()
+                article_parser = ArticleParser(content)
                 filename = format_filename(
                     article=article_parser,
                     format=args.filename_format,
