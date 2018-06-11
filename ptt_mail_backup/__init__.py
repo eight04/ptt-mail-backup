@@ -126,7 +126,7 @@ class PTTBot:
         self.screen = pyte.Screen(80, 24)
         self.stream = pyte.ByteStream(self.screen)
         self.stream.select_other_charset("@")
-        self.stream._text_pattern = no_c1_pattern(ByteStream._text_pattern)
+        self.stream._text_pattern = no_c1_pattern(pyte.ByteStream._text_pattern)
         self.article_configured = False
         
     def __enter__(self, *args):
@@ -142,20 +142,27 @@ class PTTBot:
         self.unt("請輸入代號")
         log.info("start login")
         self.send(self.user + "\r" + self.password + "\r")
-        self.unt("任意鍵", on_data=self.handle_kick)
+        self.unt("任意鍵", on_data=self.handle_login)
         log.info("login success".format(self.user))
         self.send("qqq")
+        set_trace()
         self.unt("主功能表")
         log.info("enter main menu")
         return self
         
-    def handle_kick(self, data):
+    def handle_login(self, data):
         if "刪除其他重複登入".encode("big5-uao") in data:
             if is_no(input("Kick multiple account? [Y/n] ")):
                 self.send("n\r")
             else:
                 log.info("kicked another account")
                 self.send("\r")
+        if "編輯器自動復原".encode("big5-uao") in data:
+            result = input("Save unsaved article? [0-9/n] ")
+            if is_no(result) or result == "":
+                self.send("q\r")
+            else:
+                self.send("s\r{}\r".format(int(result)))
         
     def __exit__(self, *args):
         self.client.close()
@@ -264,8 +271,8 @@ class PTTBot:
         while True:
             line_start, line_end = article.add_screen(self.lines(color=True))
             log.info("add screen {}~{}".format(line_start, line_end))
-            if line_start == 308:
-                set_trace()
+            # if line_start == 308:
+                # set_trace()
             if rx_last_page.search(self.get_line(self.screen.lines - 1)):
                 break
             self.send(" ")
