@@ -1,10 +1,11 @@
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from contextlib import contextmanager
+from collections import namedtuple
 from getpass import getpass
 import logging
 import math
 from pathlib import Path
-# from pdb import set_trace
+from pdb import set_trace
 import re
 
 # from PTTLibrary import PTT
@@ -18,7 +19,7 @@ from uao import register_uao
 __version__ = "0.0.0"
 
 register_uao()
-logging.basicConfig(level="INFO")
+
 log = logging.getLogger(__name__)
 
 fg2code = {name: str(key).encode("latin-1") for key, name in pyte.graphics.FG_ANSI.items()}
@@ -26,6 +27,9 @@ bg2code = {name: str(key).encode("latin-1") for key, name in pyte.graphics.BG_AN
 
 fg2code.update({"default": b"37"})
 bg2code.update({"default": b"40"})
+
+RX_FOOT = re.compile(r"(?:(\d+)~(\d+)\s*欄.+?)?(\d+)~(\d+)\s*行".encode("big5-uao"))
+RX_LAST_PAGE = re.compile(r"瀏覽.+?\(100%\)".encode("big5-uao"))
 
 def code_to_ansi(codes):
     return b"\x1b[" + b";".join(codes) + b"m"
@@ -115,30 +119,33 @@ class ArticleScreenLine:
         self.left_truncated = bool(skip_start)
         self.right_truncated = bool(skip_end)
         
-class ArticleScreen:
-    foot_rx = re.compile(r"(?:(\d+)~(\d+)\s*欄.+?)?(\d+)~(\d+)\s*行".encode("big5-uao"))
+Foot = namedtuple("Foot", ["col_start", "col_end", "line_start", "line_end"])
+        
+def match_foot(s):
+    match = RX_FOOT.search(s)
+    if not match:
+        return None
+    col_start, col_end, line_start, line_end = match.groups()
     
+    col_start = int(col_start) - 2 if col_start is not None else 0
+    col_end = int(col_end) if col_end is not None else 78
+    line_start = int(line_start) - 1
+    line_end = int(line_end)
+    return Foot(col_start, col_end, line_start, line_end)
+        
+class ArticleScreen:
     def __init__(self, lines):
         lines = list(lines)
+        foot = match_foot("".join(c.data for c in lines[-1]).encode("latin-1"))
         
-        result = self.foot_rx.search(lines[-1]).groups()
-        # make number zero-based
-        col_start, col_end, line_start, line_end = [
-            int(n) - 1 if n is not None else None for n in result
-        ]
-        if not col_start:
-            col_start = 0
-        if not col_end:
-            col_end = 77
-            
-        self.line_start = line_start
-        self.line_end = line_end
-        self.col_start = col_start
-        self.col_end = col_end
+        self.line_start = foot.line_start
+        self.line_end = foot.line_end
+        self.col_start = foot.col_start
+        self.col_end = foot.col_end
         
         self.lines = [
-            ArticleScreenLine(line, line_no, col_start)
-            for line_no, line in enumerate(lines[:-1], line_start)
+            ArticleScreenLine(line, line_no, self.col_start)
+            for line_no, line in enumerate(lines[:-1], self.line_start)
         ]
         
 def is_default(char):
@@ -154,7 +161,7 @@ class Article:
         
     def draw_char(self, line_no, col_no, char):
         if col_no >= len(self.lines[line_no]):
-            self.lines[line_no].extend([None] * (line_no - len(self.lines[line_no]) + 1))
+            self.lines[line_no].extend([None] * (col_no - len(self.lines[line_no]) + 1))
                 
         if self.lines[line_no][col_no] is None:
             self.lines[line_no][col_no] = char
@@ -169,7 +176,7 @@ class Article:
             self.lines.append(line.chars)
             return
             
-        for col_no, char in enumerate(line.col_no, line.chars):
+        for col_no, char in enumerate(line.chars, line.col_no):
             self.draw_char(line.line_no, col_no, char)
         
     def add_screen(self, lines):
@@ -214,7 +221,7 @@ class PTTBot:
         self.channel = self.client.invoke_shell()
         self.channel.settimeout(10)
         
-        self.channel.recv(math.inf)
+        # self.channel.recv(math.inf)
         
         self.unt("請輸入代號")
         log.info("start login")
@@ -314,7 +321,7 @@ class PTTBot:
         if line_no < 0:
             line_no += self.screen.lines
         return [self.screen.buffer[line_no][i] for i in range(self.screen.columns)]
-                    
+
     def get_line(self, line_no, color=False):
         chars = self.get_raw_line(line_no)
         if not color:
@@ -333,14 +340,10 @@ class PTTBot:
             return rx.match(last_line)
         self.unt(is_article)
         
-    first_col_needle = "目前顯示:".encode("big5-uao")
-    def on_first_col(self, _data):
-        return self.first_col_needle in self.get_line(-1)
-        
     def on_col(self, col_no):
-        needle = "{}~{} 欄".format(col_no + 1, col_no + 78)
         def callback(_data):
-            return needle in self.get_line(-1)
+            foot = match_foot(self.get_line(-1))
+            return foot and foot.col_start == col_no
         return callback
         
     def get_article(self, index):
@@ -354,11 +357,11 @@ class PTTBot:
                 log.info("skip animation")
                 self.send("n")
                 is_animated = True
-        self.unt(self.on_first_col, on_data=handle_animated)
+        self.unt(self.on_col(0), on_data=handle_animated)
         
         if is_animated:
             self.send("hq")
-            self.unt(self.on_first_col)
+            self.unt(self.on_col(0))
             log.info("refresh animation page")
             
         if not self.article_configured:
@@ -374,35 +377,45 @@ class PTTBot:
             
             indent = 0
             while any(line.right_truncated for line in screen.lines):
+                log.info("has truncated right")
                 indent += 1
                 self.send(">")
-                self.unt(self.on_col(screen.col_start + 8))
+                if screen.col_start == 0:
+                    # the first indent is shorter
+                    next_col = 7
+                else:
+                    next_col = screen.col_start + 8
+                self.unt(self.on_col(next_col))
                 screen = article.add_screen(self.lines(raw=True))
                 log.info("move right to col %s", screen.col_start)
+                # if screen.col_start == 136:
+                    # set_trace()
                 
+            log.info("max indent %s", indent)
             if indent:
                 self.send("<" * indent)
-                self.unt(self.on_first_col)
+                self.unt(self.on_col(0))
+                log.info("back to first col")
             
             if self.on_last_page():
                 break
                 
             self.send(" ")
-            self.unt(lambda _data: self.on_last_page() or self.on_line(screen.line_end))
+            self.unt(lambda _data: (
+                self.on_last_page() or self.on_line(screen.line_start + self.screen.lines - 2)
+            ))
         self.send("q")
         
         log.info("get article success")
         return article.to_bytes()
-        
-    rx_last_page = re.compile(r"瀏覽.+?\(100%\)".encode("big5-uao"))
+    
     def on_last_page(self):
-        return self.rx_last_page.search(self.get_line(-1))
+        return RX_LAST_PAGE.search(self.get_line(-1))
         
     def on_line(self, line_no):
-        needle = "{}~{} 行".format(line_no + 1, line_no + len(self.screen.lines) - 1)
-        needle = needle.encode("big5-uao")
-        return needle in self.get_line(-1)
-        
+        foot = match_foot(self.get_line(-1))
+        return foot and foot.line_start == line_no
+
 def main():
     parser = ArgumentParser(description="Backup PTT mail.")
     parser.add_argument(
@@ -414,6 +427,9 @@ def main():
     parser.add_argument(
         "--dest", default=".", help="save to dest. Default to current dir."
     )
+    parser.add_argument(
+        "--verbose", action="store_true", help="print verbose message."
+    )
     range_group = parser.add_mutually_exclusive_group(required=True)
     range_group.add_argument(
         "--range", nargs=2, type=int, metavar=("START", "END"),
@@ -424,7 +440,11 @@ def main():
     range_group.add_argument("--all", action="store_true", help="download all")
     args = parser.parse_args()
     
+    if args.verbose:
+        logging.basicConfig(level="INFO")
+    
     with PTTBot(args.user, args.password) as bot:
+        print("Login success, try entering your mail box")
         with bot.enter_mail():
             last_index = bot.get_last_index()
             if args.range:
@@ -439,8 +459,10 @@ def main():
             else:
                 raise TypeError("invalid range")
                 
+            dest = Path(args.dest)
             for i in range(start, end + 1):
+                print("Fetching mail: {}".format(i))
                 content = bot.get_article(i)
-                file = Path("ptt_mail_backup_{}.ans".format(i))
+                file = dest.joinpath("ptt_mail_backup_{}.ans".format(i))
                 file.write_bytes(content)
    

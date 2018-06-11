@@ -11,3 +11,6 @@ argument-rgx=^[a-z_\d]{1,}$
 variable-rgx=^[a-z_\d]{1,}$
 attr-rgx=^[a-z_\d]{1,}$
 const-rgx=^[a-zA-Z_\d]{1,}$
+
+[TYPECHECK]
+ignored-modules=pathlib
