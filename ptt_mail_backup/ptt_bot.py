@@ -248,7 +248,7 @@ class PTTBot:
         self.send("q")
         
         log.info("get article success")
-        return article.to_bytes()
+        return article
     
     def on_last_page(self):
         return RX_LAST_PAGE.search(self.get_line(-1))
