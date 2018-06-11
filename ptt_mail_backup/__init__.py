@@ -9,7 +9,7 @@ from ptt_article_parser.rename import format_filename
 
 from .ptt_bot import PTTBot
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 class DummyDir(DIR):
     def __init__(self, article):
