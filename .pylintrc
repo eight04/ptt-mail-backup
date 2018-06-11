@@ -7,5 +7,7 @@ disable=
 	
 [BASIC]
 # https://github.com/PyCQA/pylint/issues/2018
-argument-rgx=^[a-z_]{1,}$
-variable-rgx=^[a-z_]{1,}$
+argument-rgx=^[a-z_\d]{1,}$
+variable-rgx=^[a-z_\d]{1,}$
+attr-rgx=^[a-z_\d]{1,}$
+const-rgx=^[a-zA-Z_\d]{1,}$
