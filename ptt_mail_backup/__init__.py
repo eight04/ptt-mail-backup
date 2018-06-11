@@ -1,11 +1,11 @@
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from argparse import ArgumentParser
 from contextlib import contextmanager
 from collections import namedtuple
 from getpass import getpass
 import logging
 import math
 from pathlib import Path
-from pdb import set_trace
+# from pdb import set_trace
 import re
 
 # from PTTLibrary import PTT
@@ -13,7 +13,7 @@ from paramiko.client import SSHClient, AutoAddPolicy
 # from ptt_article_parser import strip_color
 import pyte
 import pyte.graphics
-from pyperclip import copy
+# from pyperclip import copy
 from uao import register_uao
 
 __version__ = "0.0.0"
