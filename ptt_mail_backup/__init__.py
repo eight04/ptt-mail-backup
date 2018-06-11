@@ -82,6 +82,9 @@ class ColorState:
 def colored_sequence(chars):
     color = ColorState()
     for c in chars:
+        if c is None:
+            yield b" "
+            continue
         next_color = ColorState(c)
         if color != next_color:
             yield next_color.diff(color)
@@ -89,24 +92,71 @@ def colored_sequence(chars):
         yield c.data.encode("latin-1")
     if not color.is_default():
         yield ColorState.RESET
-
+        
 class Article:
     """Article composer. Compose multiple screens into an article."""
+    foot_rx = re.compile(r"(?:(\d+)~(\d+)\s*欄.+?)?(\d+)~(\d+)\s*行".encode("big5-uao"))
+    
     def __init__(self):
         self.lines = []
-        # self.line_no = 0
+        
+    def draw_char(self, line_no, col_no, char):
+        if col_no >= len(self.lines[line_no]):
+            for i in range(line_no - len(self.lines[line_no]) + 1):
+                self.lines[line_no].append(None)
+                
+        if self.lines[line_no][col_no] is None:
+            self.lines[line_no][col_no] = char
+        
+    def draw_line(line_no, col_start, line):
+        if line_no > len(self.lines):
+            for i in range(line_no - len(self.lines)):
+                self.lines.append([])
+            
+        skip_start = 0
+        if is_truncated(line[0]):
+            if line[1].data == "?":
+                skip_start = 2
+            else:
+                skip_start = 1
+        skip_end = 0
+        if is_truncated(line[78]) and is_default(line[79]):
+            if line[77].data == "?":
+                skip_end = 3
+            else:
+                skip_end = 2
+                
+        if line_no == len(self.lines) and col_start == 0:
+            # no need to draw char
+            self.lines.append(line)
+            return
+            
+        col_start += skip_start
+        line = line[skip_start:len(line) - skip_end]
+        for col_no, char in enumerate(col_start, line):
+            self.draw_char(line_no, col_no, char)
         
     def add_screen(self, lines):
         lines = list(lines)
         # set_trace()
-        range = re.search(r"第\s*(\d+)~(\d+)\s*行".encode("big5-uao"), lines[-1]).groups()
-        line_start, line_end = [int(l) - 1 for l in range] # zero-based
+        result = self.foot_rx.search(lines[-1]).groups()
+        # make number zero-based
+        col_start, col_end, line_start, line_end = [
+            int(n) - 1 for n in result if n is not None else None
+        ]
+        if not col_start:
+            col_start = 0
+        if not col_end:
+            col_end = 77
+            
         assert line_start <= len(self.lines)
-        self.lines.extend(lines[len(self.lines) - line_start:-1])
-        return line_start, line_end
+        for line_no, line in enumerate(lines[:-1], line_start):
+            self.draw_line(line_no, col_start, line)
+            
+        return col_start, col_end, line_start, line_end
         
     def to_bytes(self):
-        return b"\r\n".join(self.lines)
+        return b"\r\n".join(b"".join(colored_sequence(l)).rstrip() for l in self.lines)
         
 def is_no(text):
     return bool(re.match("\s*(n|no)\s*", text, re.I))
@@ -136,6 +186,7 @@ class PTTBot:
             self.password = getpass()
         self.client.connect("ptt.cc", username="bbs", password="")
         self.channel = self.client.invoke_shell()
+        self.channel.settimeout(10)
         
         self.channel.recv(math.inf)
         
@@ -145,7 +196,7 @@ class PTTBot:
         self.unt("任意鍵", on_data=self.handle_login)
         log.info("login success".format(self.user))
         self.send("qqq")
-        set_trace()
+        # set_trace()
         self.unt("主功能表")
         log.info("enter main menu")
         return self
@@ -220,18 +271,24 @@ class PTTBot:
         log.info("get last index success: {}".format(last_index))
         return last_index
         
-    def lines(self, reverse=False, color=False):
+    def lines(self, reverse=False, color=False, raw=False):
         if reverse:
             it = range(self.screen.lines - 1, -1, -1)
         else:
             it = range(self.screen.lines)
         for i in it:
-            yield self.get_line(i, color=color)
-                    
-    def get_line(self, line_no, color=False):
+            if raw:
+                yield selt.get_raw_line(i)
+            else:
+                yield self.get_line(i, color=color)
+                
+    def get_raw_line(self, line_no):
         if line_no < 0:
             line_no += self.screen.lines
-        chars = (self.screen.buffer[line_no][i] for i in range(self.screen.columns))
+        return [self.screen.buffer[line_no][i] for i in range(self.screen.columns)]
+                    
+    def get_line(self, line_no, color=False):
+        chars = self.get_raw_line(line_no)
         if not color:
             return "".join(c.data for c in chars).encode("latin-1")
         return b"".join(colored_sequence(chars))
@@ -269,7 +326,7 @@ class PTTBot:
         article = Article()
         rx_last_page = re.compile(r"瀏覽.+?\(100%\)".encode("big5-uao"))
         while True:
-            line_start, line_end = article.add_screen(self.lines(color=True))
+            line_start, line_end = article.add_screen(self.lines(raw=True))
             log.info("add screen {}~{}".format(line_start, line_end))
             # if line_start == 308:
                 # set_trace()
