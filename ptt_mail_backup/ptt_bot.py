@@ -12,7 +12,7 @@ from .byte_stream import ByteStream
 from .ansi import chars_to_bytes
 from .article import match_foot, Article
 
-uao.register_uao
+uao.register_uao()
 
 log = logging.getLogger(__name__)
 

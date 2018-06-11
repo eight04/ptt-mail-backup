@@ -1,10 +1,12 @@
 [MESSAGES CONTROL]
 disable=
-	design,
-	fixme,
-	missing-docstring,
-	trailing-whitespace,
-	
+  design,
+  fixme,
+  missing-docstring,
+  trailing-whitespace,
+  # https://github.com/PyCQA/pylint/issues/2175
+  wrong-import-order,
+  
 [BASIC]
 # https://github.com/PyCQA/pylint/issues/2018
 argument-rgx=^[a-z_\d]{1,}$
