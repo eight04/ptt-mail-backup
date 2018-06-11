@@ -68,6 +68,10 @@ Usage
 Changelog
 ---------
 
-* 0.1.0 (Next)
+* 0.1.1 (Jun 12, 2018)
+
+  - Fix: missing deps.
+
+* 0.1.0 (Jun 12, 2018)
 
   - First release.
