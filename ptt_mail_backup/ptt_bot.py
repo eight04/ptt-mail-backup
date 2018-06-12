@@ -46,13 +46,15 @@ class PTTBot:
         self.unt("請輸入代號")
         log.info("start login")
         self.send(self.user + "\r" + self.password + "\r")
-        self.unt("任意鍵", on_data=self.handle_login)
+        self.unt("按任意鍵繼續", on_data=self.handle_login)
         log.info("%s login success", self.user)
-        self.send("qqq")
-        # set_trace()
-        self.unt("主功能表")
+        self.send(" ")
+        self.unt(self.on_main, self.handle_after_login)
         log.info("enter main menu")
         return self
+        
+    def on_main(self, _data):
+        return "主功能表".encode("big5-uao") in self.get_line(0)
         
     def handle_login(self, data):
         if "刪除其他重複登入".encode("big5-uao") in data:
@@ -61,12 +63,17 @@ class PTTBot:
             else:
                 log.info("kicked another account")
                 self.send("\r")
+                
+    def handle_after_login(self, data):
         if "編輯器自動復原".encode("big5-uao") in data:
             result = input("Save unsaved article? [0-9/n] ")
             if is_no(result) or result == "":
                 self.send("q\r")
             else:
                 self.send("s\r{}\r".format(int(result)))
+                
+        if "郵件已滿".encode("big5-uao") in data:
+            self.send("qq")
         
     def __exit__(self, exc_type, ext_value, ext_traceback):
         self.client.close()
