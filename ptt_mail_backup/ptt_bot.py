@@ -41,14 +41,12 @@ class PTTBot:
         self.channel = self.client.invoke_shell()
         self.channel.settimeout(10)
         
-        # self.channel.recv(math.inf)
-        
         self.unt("請輸入代號")
         log.info("start login")
         self.send(self.user + "\r" + self.password + "\r")
         self.unt("按任意鍵繼續", on_data=self.handle_login)
         log.info("%s login success", self.user)
-        self.send(" ")
+        self.send("qqq")
         self.unt(self.on_main, self.handle_after_login)
         log.info("enter main menu")
         return self
@@ -58,22 +56,17 @@ class PTTBot:
         
     def handle_login(self, data):
         if "刪除其他重複登入".encode("big5-uao") in data:
-            if is_no(input("Kick multiple account? [Y/n] ")):
-                self.send("n\r")
-            else:
-                log.info("kicked another account")
-                self.send("\r")
+            self.send("n\r")
+            
+        if "密碼不對喔！".encode("big5-uao") in data:
+            raise Exception("failed to login. Wrong password.")
                 
     def handle_after_login(self, data):
         if "編輯器自動復原".encode("big5-uao") in data:
-            result = input("Save unsaved article? [0-9/n] ")
-            if is_no(result) or result == "":
-                self.send("q\r")
-            else:
-                self.send("s\r{}\r".format(int(result)))
-                
-        if "郵件已滿".encode("big5-uao") in data:
-            self.send("qq")
+            raise Exception("failed to login. Unsaved article detected.")
+            
+        if "您要刪除以上錯誤嘗試的記錄嗎?".encode("big5-uao") in data:
+            raise Exception("failed to login. Try password detected.")
         
     def __exit__(self, exc_type, ext_value, ext_traceback):
         self.client.close()
