@@ -7,7 +7,7 @@ from ptt_article_parser import Article as ArticleParser
 from ptt_article_parser.dir import DIR
 from ptt_article_parser.rename import format_filename
 
-from .ptt_bot import PTTBot
+from .ptt_bot import ptt_login
 
 __version__ = "0.1.1"
 
@@ -61,7 +61,7 @@ def main():
     if args.verbose:
         logging.basicConfig(level="INFO")
     
-    with PTTBot(args.user, args.password) as bot:
+    with ptt_login(args.user, args.password) as bot:
         print("Login success, try entering your mail box")
         with bot.enter_mail():
             last_index = bot.get_last_index()

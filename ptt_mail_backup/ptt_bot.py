@@ -9,7 +9,6 @@ from paramiko.client import SSHClient, AutoAddPolicy
 
 from .byte_screen import ByteScreen
 from .byte_stream import ByteStream
-from .ansi import chars_to_bytes
 from .article import match_foot, Article
 
 uao.register_uao()
@@ -21,64 +20,93 @@ RX_LAST_PAGE = re.compile(r"瀏覽.+?\(100%\)".encode("big5-uao"))
 def is_no(text):
     return bool(re.match(r"\s*(n|no)\s*", text, re.I))
     
+def parse_board_item(line):
+    no, date, sender, title = (
+        t.decode("big5-uao").strip()
+        for t in (line[0:6], line[9:14], line[15:30], line[30:])
+    )
+    no = int(no.replace("●", "").strip())
+    if title.startswith("轉"):
+        title = "Fw:" + title[1:]
+    elif title.startswith("◇"):
+        title = title[2:]
+    elif title.startswith("R:"):
+        title = "Re:" + title[2:]
+    return no, date, sender, title
+    
+@contextmanager
+def ptt_login(user=None, password=None):
+    with SSHClient() as client:
+        client.set_missing_host_key_policy(AutoAddPolicy)
+        client.connect("ptt.cc", username="bbs", password="")
+        with client.invoke_shell() as channel:
+            channel.settimeout(10)
+            bot = PTTBot(channel)
+            try:
+                bot.login(user, password)
+                yield bot
+            except:
+                log.info(
+                    "uncaught error, here is the last screen:\n%s",
+                    "\n".join(line.decode("big5-uao").rstrip() for line in bot.lines())
+                )
+                raise
+    
 class PTTBot:
-    def __init__(self, user=None, password=None):
-        self.client = SSHClient()
-        self.client.set_missing_host_key_policy(AutoAddPolicy)
-        self.channel = None
-        self.user = user
-        self.password = password
+    def __init__(self, channel):
+        self.channel = channel
         self.screen = ByteScreen(80, 24)
         self.stream = ByteStream(self.screen)
         self.article_configured = False
         
-    def __enter__(self, *args):
-        if not self.user:
-            self.user = input("User: ")
-        if not self.password:
-            self.password = getpass()
-        self.client.connect("ptt.cc", username="bbs", password="")
-        self.channel = self.client.invoke_shell()
-        self.channel.settimeout(10)
-        
+    def login(self, user=None, password=None):
+        if not user:
+            user = input("User: ")
+        if not password:
+            password = getpass()
         self.unt("請輸入代號")
+        
         log.info("start login")
-        self.send(self.user + "\r" + self.password + "\r")
-        self.unt("按任意鍵繼續", on_data=self.handle_login)
-        log.info("%s login success", self.user)
-        self.send(" ")
-        self.unt(self.on_main, self.handle_after_login)
-        log.info("enter main menu")
-        return self
         
-    def on_main(self, _data):
-        return "主功能表".encode("big5-uao") in self.get_line(0)
-        
-    def handle_login(self, data):
-        if "刪除其他重複登入".encode("big5-uao") in data:
-            self.send("n\r")
-            
-        if "密碼不對喔！".encode("big5-uao") in data:
-            raise Exception("failed to login. Wrong password.")
+        self.send(user + "\r" + password + "\r")
+        def handle_login(data):
+            if "刪除其他重複登入".encode("big5-uao") in data:
+                self.send("n\r")
                 
-    def handle_after_login(self, data):
-        if "編輯器自動復原".encode("big5-uao") in data:
-            raise Exception("failed to login. Unsaved article detected.")
-            
-        if "您要刪除以上錯誤嘗試的記錄嗎?".encode("big5-uao") in data:
-            self.send("n\r")
-            
-        if "郵件已滿".encode("big5-uao") in data:
-            self.send("qq")
+            if "密碼不對喔！".encode("big5-uao") in data:
+                raise Exception("failed to login. Wrong password.")
+        self.unt("按任意鍵繼續", on_data=handle_login)
         
-    def __exit__(self, exc_type, ext_value, ext_traceback):
-        self.client.close()
-        if ext_value:
-            log.info(
-                "uncaught error, here is the last screen:\n%s",
-                "\n".join(line.decode("big5-uao").rstrip() for line in self.lines())
-            )
-    
+        log.info("%s login success", user)
+        
+        self.send(" ")
+        def handle_after_login(data):
+            if "編輯器自動復原".encode("big5-uao") in data:
+                raise Exception("failed to login. Unsaved article detected.")
+                
+            if "您要刪除以上錯誤嘗試的記錄嗎?".encode("big5-uao") in data:
+                self.send("n\r")
+                
+            if "郵件已滿".encode("big5-uao") in data:
+                self.send("qq")
+        self.unt(self.detect("主功能表", 0), on_data=handle_after_login)
+        log.info("enter main menu")
+        
+    def detect(self, *args):
+        if len(args) == 2:
+            units = [args]
+        else:
+            units = args
+        def callback(_data):
+            for needle, line_no in units:
+                if needle.startswith("!"):
+                    if needle[1:].encode("big5-uao") not in self.get_line(line_no):
+                        return True
+                elif needle.encode("big5-uao") in self.get_line(line_no):
+                    return True
+            return False
+        return callback
+        
     def unt(self, needle, on_data=None):
         if callable(needle):
             should_stop = needle
@@ -119,42 +147,29 @@ class PTTBot:
         last_index = None
         def on_data(data):
             nonlocal last_index
-            if "呼叫小天使".encode("big5-uao") not in data:
-                return
-            for line in self.lines(reverse=True):
-                # set_trace()
-                line = line.decode("big5-uao")
-                # print(line)
-                match = re.search(r"^●?\s*(\d+)", line)
-                if match:
-                    last_index = int(match.group(1))
-                    break
+            if "呼叫小天使".encode("big5-uao") in data:
+                no, *_args = parse_board_item(self.get_line(self.screen.cursor.y))
+                last_index = no
         self.unt("呼叫小天使", on_data=on_data)
         self.send("q")
         log.info("get last index success: %s", last_index)
         return last_index
         
-    def lines(self, reverse=False, color=False, raw=False):
-        if reverse:
-            it = range(self.screen.lines - 1, -1, -1)
-        else:
-            it = range(self.screen.lines)
-        for i in it:
+    def lines(self, raw=False):
+        for i in range(self.screen.lines):
             if raw:
                 yield self.get_raw_line(i)
             else:
-                yield self.get_line(i, color=color)
+                yield self.get_line(i)
                 
     def get_raw_line(self, line_no):
         if line_no < 0:
             line_no += self.screen.lines
         return [self.screen.buffer[line_no][i] for i in range(self.screen.columns)]
 
-    def get_line(self, line_no, color=False):
+    def get_line(self, line_no):
         chars = self.get_raw_line(line_no)
-        if not color:
-            return "".join(c.data for c in chars).encode("latin-1")
-        return chars_to_bytes(chars)
+        return "".join(c.data for c in chars).encode("latin-1")
         
     def update_article_config(self):
         """Update article config. It is hard to work with articles containing
@@ -181,18 +196,9 @@ class PTTBot:
         self.send(str(index))
         self.unt("跳至第幾項")
         self.send("\r")
-        self.unt(lambda _data: "跳至第幾項".encode("big5-uao") not in self.get_line(-1))
+        self.unt(self.detect("!跳至第幾項", -1))
         curr_line = self.get_line(self.screen.cursor.y)
-        date, sender, title = (
-            t.decode("big5-uao").strip()
-            for t in (curr_line[9:14], curr_line[15:30], curr_line[30:])
-        )
-        if title.startswith("轉"):
-            title = "Fw:" + title[1:]
-        elif title.startswith("◇"):
-            title = title[2:]
-        elif title.startswith("R:"):
-            title = "Re:" + title[2:]
+        _no, date, sender, title = parse_board_item(curr_line)
         
         log.info("title: %s", title)
         article = Article(date, sender, title)
