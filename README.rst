@@ -25,7 +25,7 @@ From `PYPI <https://pypi.org/project/ptt-mail-backup/>`__:
 Known issues
 ------------
 
-* [不支援閃爍字](https://github.com/eight04/ptt-mail-backup/issues/3)
+* `不支援閃爍字 <https://github.com/eight04/ptt-mail-backup/issues/3>`__
 
 Usage
 -----
