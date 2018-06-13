@@ -46,7 +46,7 @@ class PTTBot:
         self.send(self.user + "\r" + self.password + "\r")
         self.unt("按任意鍵繼續", on_data=self.handle_login)
         log.info("%s login success", self.user)
-        self.send("qqq")
+        self.send(" ")
         self.unt(self.on_main, self.handle_after_login)
         log.info("enter main menu")
         return self
@@ -66,7 +66,10 @@ class PTTBot:
             raise Exception("failed to login. Unsaved article detected.")
             
         if "您要刪除以上錯誤嘗試的記錄嗎?".encode("big5-uao") in data:
-            raise Exception("failed to login. Try password detected.")
+            self.send("n\r")
+            
+        if "郵件已滿".encode("big5-uao") in data:
+            self.send("qq")
         
     def __exit__(self, exc_type, ext_value, ext_traceback):
         self.client.close()
