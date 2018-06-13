@@ -21,6 +21,11 @@ From `PYPI <https://pypi.org/project/ptt-mail-backup/>`__:
 ::
 
   pip install ptt-mail-backup
+  
+Known issues
+------------
+
+* [不支援閃爍字](https://github.com/eight04/ptt-mail-backup/issues/3)
 
 Usage
 -----
