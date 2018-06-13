@@ -92,19 +92,17 @@ class PTTBot:
         self.unt(self.detect("主功能表", 0), on_data=handle_after_login)
         log.info("enter main menu")
         
-    def detect(self, *args):
-        if len(args) == 2:
-            units = [args]
+    def detect(self, needle, line_no):
+        if needle.startswith("!"):
+            reverse = True
+            needle = needle[1:].encode("big5-uao")
         else:
-            units = args
+            reverse = False
+            needle = needle.encode("big5-uao")
         def callback(_data):
-            for needle, line_no in units:
-                if needle.startswith("!"):
-                    if needle[1:].encode("big5-uao") not in self.get_line(line_no):
-                        return True
-                elif needle.encode("big5-uao") in self.get_line(line_no):
-                    return True
-            return False
+            if reverse:
+                return needle not in self.get_line(line_no)
+            return needle in self.get_line(line_no)
         return callback
         
     def unt(self, needle, on_data=None):
