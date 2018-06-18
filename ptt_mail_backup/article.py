@@ -67,40 +67,53 @@ class ArticleScreen:
         
 class Article:
     """Article composer. Compose multiple screens into an article."""
-    def __init__(self, date, sender, title):
-        self.date = date
-        self.sender = sender
-        self.title = title
-        self.lines = []
+    def __init__(self, mail_info):
+        # self.date = date
+        # self.sender = sender
+        # self.title = title
+        # self.lines = []
+        self.mail_info = mail_info
         
-    def draw_char(self, line_no, col_no, char):
-        if col_no >= len(self.lines[line_no]):
-            self.lines[line_no].extend([None] * (col_no - len(self.lines[line_no]) + 1))
-                
-        if self.lines[line_no][col_no] is None:
-            self.lines[line_no][col_no] = char
+    @property
+    def date(self):
+        return self.mail_info.getDate()
         
-    def draw_line(self, line):
-        if line.line_no > len(self.lines):
-            for _i in range(line.line_no - len(self.lines)):
-                self.lines.append([])
+    @property
+    def sender(self):
+        return self.mail_info.getAuthor()
+        
+    @property
+    def title(self):
+        return self.mail_info.getTitle()
+        
+    # def draw_char(self, line_no, col_no, char):
+        # if col_no >= len(self.lines[line_no]):
+            # self.lines[line_no].extend([None] * (col_no - len(self.lines[line_no]) + 1))
                 
-        if line.line_no == len(self.lines) and line.col_no == 0:
-            # no need to draw char
-            self.lines.append(line.chars)
-            return
+        # if self.lines[line_no][col_no] is None:
+            # self.lines[line_no][col_no] = char
+        
+    # def draw_line(self, line):
+        # if line.line_no > len(self.lines):
+            # for _i in range(line.line_no - len(self.lines)):
+                # self.lines.append([])
+                
+        # if line.line_no == len(self.lines) and line.col_no == 0:
+            # self.lines.append(line.chars)
+            # return
             
-        for col_no, char in enumerate(line.chars, line.col_no):
-            self.draw_char(line.line_no, col_no, char)
+        # for col_no, char in enumerate(line.chars, line.col_no):
+            # self.draw_char(line.line_no, col_no, char)
         
-    def add_screen(self, lines, skip_line=None):
-        screen = ArticleScreen(lines)
-        assert screen.line_start <= len(self.lines)
-        for line in screen.lines:
-            if skip_line and skip_line(line):
-                continue
-            self.draw_line(line)
-        return screen
+    # def add_screen(self, lines, skip_line=None):
+        # screen = ArticleScreen(lines)
+        # assert screen.line_start <= len(self.lines)
+        # for line in screen.lines:
+            # if skip_line and skip_line(line):
+                # continue
+            # self.draw_line(line)
+        # return screen
         
     def to_bytes(self):
-        return b"\r\n".join(chars_to_bytes(l).rstrip() for l in self.lines)
+        return self.mail_info.getRawData()
+        # return b"\r\n".join(chars_to_bytes(l).rstrip() for l in self.lines)

@@ -2,6 +2,7 @@ import argparse
 import logging
 import pathlib
 from datetime import datetime
+from pprint import pprint
 
 from ptt_article_parser import Article as ArticleParser
 from ptt_article_parser.dir import DIR
@@ -82,7 +83,9 @@ def main():
             for i in range(start, end + 1):
                 print("Fetching mail: {}".format(i))
                 article = bot.get_article(i)
+                # pprint(article)
                 content = article.to_bytes()
+                # content = article.getRawData()
                 article_parser = ArticleParser(content)
                 filename = format_filename(
                     article=article_parser,
