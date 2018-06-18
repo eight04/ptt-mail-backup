@@ -50,10 +50,10 @@ def main():
     )
     range_group = parser.add_mutually_exclusive_group(required=True)
     range_group.add_argument(
-        "-r", "--range", nargs=2, type=int, metavar=("START", "END"),
+        "-r", "--range", nargs=2, type=int, metavar=("START", "END"), action="append",
         help="specify a range (inclusive). Negative values and zeros are "
              "allowed, they are treated as (last_index + value) i.e. --range 0 "
-             "0 would download the last mail."
+             "0 would download the last mail. This option could be used multiple times."
     )
     range_group.add_argument("--all", action="store_true", help="download all")
     args = parser.parse_args()
@@ -65,29 +65,28 @@ def main():
         print("Login success, try entering your mail box")
         with bot.enter_mail():
             last_index = bot.get_last_index()
-            if args.range:
-                start, end = args.range
+            if args.all:
+                args.range = [[1, last_index]]
+                start = 1
+                end = last_index
+                
+            for start, end in args.range:
                 if start <= 0:
                     start += last_index
                 if end <= 0:
                     end += last_index
-            elif args.all:
-                start = 1
-                end = last_index
-            else:
-                raise TypeError("invalid range")
                 
-            dest = pathlib.Path(args.dest)
-            dest.mkdir(parents=True, exist_ok=True)
-            for i in range(start, end + 1):
-                print("Fetching mail: {}".format(i))
-                article = bot.get_article(i)
-                content = article.to_bytes()
-                article_parser = ArticleParser(content)
-                filename = format_filename(
-                    article=article_parser,
-                    format=args.filename_format,
-                    dir=DummyDir(article),
-                    extra={"index": i}
-                )
-                dest.joinpath(filename).write_bytes(content)
+                dest = pathlib.Path(args.dest)
+                dest.mkdir(parents=True, exist_ok=True)
+                for i in range(start, end + 1):
+                    print("Fetching mail: {}".format(i))
+                    article = bot.get_article(i)
+                    content = article.to_bytes()
+                    article_parser = ArticleParser(content)
+                    filename = format_filename(
+                        article=article_parser,
+                        format=args.filename_format,
+                        dir=DummyDir(article),
+                        extra={"index": i}
+                    )
+                    dest.joinpath(filename).write_bytes(content)
