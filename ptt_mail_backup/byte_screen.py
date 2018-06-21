@@ -2,7 +2,7 @@
 A pyte screen that is allowed to draw unprintable characters.
 """
 
-import wcwidth
+from wcwidth import wcwidth
 from .pyte.screens import Screen, mo, unicodedata
 
 class ByteScreen(Screen):
