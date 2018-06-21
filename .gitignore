@@ -25,6 +25,7 @@ var/
 *.egg
 MANIFEST
 *.zip
+ptt_mail_backup/pyte
 
 # Installer logs
 pip-log.txt
