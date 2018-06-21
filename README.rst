@@ -69,6 +69,11 @@ Usage
 從 CLI 傳入使用者名稱、密碼，並下載最舊的信件::
 
   ptt-mail-backup -u myusername -p mypassword -r 1 1
+  
+License
+-------
+
+The distributed package `includes a branch of pyte <https://github.com/eight04/pyte/tree/dev-blink>`__ which supports blinking text. ``pyte`` is licensed under LGPL v3 and ``ptt_mail_backup`` itself is licensed under MIT.
       
 Changelog
 ---------
