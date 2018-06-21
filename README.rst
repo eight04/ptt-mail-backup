@@ -12,6 +12,7 @@ Features
 * 使用 SSH 連上 PTT，再一頁頁爬
 * 下載回來的檔案為 Big5-UAO 編碼
 * 支援自動換行、寬度大於 80 的文章
+* 支援上色、閃爍、雙色字
 
 Installation
 ------------
@@ -22,11 +23,6 @@ From `PYPI <https://pypi.org/project/ptt-mail-backup/>`__:
 
   pip install ptt-mail-backup
   
-Known issues
-------------
-
-* `不支援閃爍字 <https://github.com/eight04/ptt-mail-backup/issues/3>`__
-
 Usage
 -----
 
