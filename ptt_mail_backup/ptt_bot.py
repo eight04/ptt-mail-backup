@@ -58,12 +58,14 @@ class PTTBot:
         self.screen = ByteScreen(80, 24)
         self.stream = ByteStream(self.screen)
         self.article_configured = False
+        self.user = None
         
     def login(self, user=None, password=None):
         if not user:
             user = input("User: ")
         if not password:
             password = getpass()
+        self.user = user
         self.unt("請輸入代號")
         
         log.info("start login")
@@ -199,6 +201,13 @@ class PTTBot:
         _no, date, sender, title = parse_board_item(curr_line)
         
         log.info("title: %s", title)
+        
+        self.send("x" + self.user + "\r")
+        self.unt(self.detect("標  題:", 2))
+        title = self.get_line(2)[8:].strip()[:-5].strip().decode("big5-uao")
+        self.send("n\r\x18a\r\r")
+        self.unt(self.detect("郵件選單", 0))
+        
         article = Article(date, sender, title)
         
         self.send("\r")
