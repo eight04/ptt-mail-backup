@@ -50,7 +50,8 @@ Usage
     -r START END, --range START END
                           specify a range (inclusive). Negative values and zeros
                           are allowed, they are treated as (last_index + value)
-                          i.e. --range 0 0 would download the last mail.
+                          i.e. --range 0 0 would download the last mail. This
+                          option could be used multiple times.
     --all                 download all
 
 或是 ``python -m ptt_mail_backup ...``。
@@ -77,6 +78,15 @@ The distributed package `includes a branch of pyte <https://github.com/eight04/p
       
 Changelog
 ---------
+
+* 0.2.0 (Jun 22, 2018)
+
+  - The distributed package now includes ``pyte`` with blinking text support.
+  - Add: a better way to get full title.
+  - Add: allow multiple ``--range``.
+  - Fix: handle password error.
+  - Fix: handle article recovery screen.
+  - Fix: handle password attack alert screen.
 
 * 0.1.1 (Jun 12, 2018)
 
