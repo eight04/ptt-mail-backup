@@ -21,8 +21,6 @@ def build():
         match = re.match(r".+?/(pyte/.+\.py)$", name)
         if match:
             return "ptt_mail_backup/{}".format(match.group(1))
-        if re.match(".+?/LICENSE$", name):
-            return "ptt_mail_backup/pyte/LICENSE"
         return None
     extract_zip(r.content, includes)
                         
