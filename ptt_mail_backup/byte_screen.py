@@ -2,10 +2,10 @@
 A pyte screen that is allowed to draw unprintable characters.
 """
 
-import pyte
-from pyte.screens import wcwidth, mo, unicodedata
+from wcwidth import wcwidth
+from .pyte.screens import Screen, mo, unicodedata
 
-class ByteScreen(pyte.Screen):
+class ByteScreen(Screen):
     def draw(self, data):
         data = data.translate(
             self.g1_charset if self.charset else self.g0_charset)

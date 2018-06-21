@@ -1,5 +1,5 @@
 from collections import namedtuple
-from pyte.graphics import FG_ANSI, BG_ANSI
+from .pyte.graphics import FG_ANSI, BG_ANSI
 
 fg2code = {name: str(key).encode("latin-1") for key, name in FG_ANSI.items()}
 bg2code = {name: str(key).encode("latin-1") for key, name in BG_ANSI.items()}

@@ -2,4 +2,5 @@ language: python
 python:
   - "3.6"
 script:
+  - python cute.py build
   - python cute.py test
