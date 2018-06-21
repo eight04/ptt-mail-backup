@@ -1,3 +1,6 @@
+[MASTER]
+ignore=pyte
+
 [MESSAGES CONTROL]
 disable=
   design,
