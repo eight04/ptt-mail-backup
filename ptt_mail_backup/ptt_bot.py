@@ -91,6 +91,9 @@ class PTTBot:
                 
             if "郵件已滿".encode("big5-uao") in data:
                 self.send("qq")
+                
+            if "新看板，確定要加入我的最愛嗎".encode("big5-uao") in data:
+                self.send("y\r")
         self.unt(self.detect("主功能表", 0), on_data=handle_after_login)
         log.info("enter main menu")
         
