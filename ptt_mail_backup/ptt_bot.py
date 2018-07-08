@@ -89,7 +89,7 @@ class PTTBot:
             if "您要刪除以上錯誤嘗試的記錄嗎?".encode("big5-uao") in data:
                 self.send("n\r")
                 
-            if re.search("您保存信件數目 \d+ 超出上限 \d+".encode("big5-uao"), data):
+            if re.search(r"您保存信件數目 \d+ 超出上限 \d+".encode("big5-uao"), data):
                 self.send("qq")
                 
             if "新看板，確定要加入我的最愛嗎".encode("big5-uao") in data:
