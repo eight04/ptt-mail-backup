@@ -75,6 +75,11 @@ The distributed package `includes a branch of pyte <https://github.com/eight04/p
 Changelog
 ---------
 
+* 0.2.1 (Jul 25, 2018)
+
+  - Fix: handle ``mailbox is full`` message.
+  - Fix: handle ``add new board to favorite`` message.
+
 * 0.2.0 (Jun 22, 2018)
 
   - The distributed package now includes ``pyte`` with blinking text support.
