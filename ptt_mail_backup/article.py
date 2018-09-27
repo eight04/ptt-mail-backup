@@ -81,14 +81,14 @@ class Article:
             self.lines[line_no][col_no] = char
         
     def draw_line(self, line):
-        if line.line_no > len(self.lines):
-            for _i in range(line.line_no - len(self.lines)):
-                self.lines.append([])
-                
         if line.line_no == len(self.lines) and line.col_no == 0:
-            # no need to draw char
+            # no need to draw char but append the entire line
             self.lines.append(line.chars)
             return
+            
+        if line.line_no >= len(self.lines):
+            for _i in range(line.line_no - len(self.lines) + 1):
+                self.lines.append([])
             
         for col_no, char in enumerate(line.chars, line.col_no):
             self.draw_char(line.line_no, col_no, char)
