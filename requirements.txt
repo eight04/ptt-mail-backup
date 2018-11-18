@@ -6,3 +6,4 @@ pyxcute<0.6,>=0.5.1
 requests<3,>=2.18.4
 sphinx-autobuild<0.8,>=0.7.1
 twine<2,>=1.6.5
+wheel==0.32.2
