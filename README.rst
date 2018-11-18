@@ -75,6 +75,10 @@ The distributed package `includes a branch of pyte <https://github.com/eight04/p
 Changelog
 ---------
 
+* 0.2.2 (Nov 18, 2018)
+
+  - Fix: Support Python 3.7.
+
 * 0.2.1 (Jul 25, 2018)
 
   - Fix: handle ``mailbox is full`` message.
