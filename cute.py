@@ -41,7 +41,7 @@ cute(
     pkg_name = 'ptt_mail_backup',
     build = build,
     lint = 'pylint {pkg_name} cute setup',
-    test = ['lint', 'readme_build'],
+    test = ['lint', 'pytest', 'readme_build'],
     bump_pre = ['build', 'test'],
     bump_post = ['dist', 'release', 'publish', 'install'],
     dist = ['x-clean build dist && python setup.py sdist bdist_wheel'],
