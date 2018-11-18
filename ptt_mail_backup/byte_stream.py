@@ -6,7 +6,8 @@ from .pyte import ByteStream as _ByteStream
 
 def no_c1_pattern(rx):
     # pyte uses a single backslash to escape every characters
-    pattern = re.sub(r"\\[\x9b\x9d]", "", rx.pattern)
+    # https://github.com/eight04/ptt-mail-backup/issues/7
+    pattern = re.sub(r"\\[\x9b\x9d]|[\x9b\x9d]", "", rx.pattern)
     return re.compile(pattern)
         
 class ByteStream(_ByteStream):
