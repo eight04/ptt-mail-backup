@@ -83,17 +83,30 @@ class PTTBot:
         
         self.send(" ")
         def handle_after_login(data):
+            login_views = [
+                "本週五十大熱門話題",
+                "本日十大熱門話題",
+                "每小時上站人次統計",
+                "本站歷史",
+                "byte數   總 分",
+                "大富翁 排行榜",
+                "(←/q)"
+            ]
+        
             if "編輯器自動復原".encode("big5-uao") in data:
                 raise Exception("failed to login. Unsaved article detected.")
                 
-            if "您要刪除以上錯誤嘗試的記錄嗎?".encode("big5-uao") in data:
+            elif "您要刪除以上錯誤嘗試的記錄嗎?".encode("big5-uao") in data:
                 self.send("n\r")
                 
-            if re.search(r"您保存信件數目 \d+ 超出上限 \d+".encode("big5-uao"), data):
+            elif re.search(r"您保存信件數目 \d+ 超出上限 \d+".encode("big5-uao"), data):
                 self.send("qq")
                 
-            if "新看板，確定要加入我的最愛嗎".encode("big5-uao") in data:
+            elif "新看板，確定要加入我的最愛嗎".encode("big5-uao") in data:
                 self.send("y\r")
+                
+            elif any(view.encode("big5-uao") in data for view in login_views):
+                self.send("qq")
         self.unt(self.detect("主功能表", 0), on_data=handle_after_login)
         log.info("enter main menu")
         
