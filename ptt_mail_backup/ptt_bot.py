@@ -16,6 +16,15 @@ uao.register_uao()
 log = logging.getLogger(__name__)
 
 RX_LAST_PAGE = re.compile(r"瀏覽.+?\(100%\)".encode("big5-uao"))
+LOGIN_VIEWS = [
+    "本週五十大熱門話題",
+    "本日十大熱門話題",
+    "每小時上站人次統計",
+    "本站歷史",
+    "byte數   總 分",
+    "大富翁 排行榜",
+    "(←/q)"
+]
 
 def is_no(text):
     return bool(re.match(r"\s*(n|no)\s*", text, re.I))
@@ -83,20 +92,10 @@ class PTTBot:
         
         self.send(" ")
         def handle_after_login(data):
-            login_views = [
-                "本週五十大熱門話題",
-                "本日十大熱門話題",
-                "每小時上站人次統計",
-                "本站歷史",
-                "byte數   總 分",
-                "大富翁 排行榜",
-                "(←/q)"
-            ]
-        
             if "編輯器自動復原".encode("big5-uao") in data:
                 raise Exception("failed to login. Unsaved article detected.")
                 
-            elif "您要刪除以上錯誤嘗試的記錄嗎?".encode("big5-uao") in data:
+            if "您要刪除以上錯誤嘗試的記錄嗎?".encode("big5-uao") in data:
                 self.send("n\r")
                 
             elif re.search(r"您保存信件數目 \d+ 超出上限 \d+".encode("big5-uao"), data):
@@ -105,7 +104,7 @@ class PTTBot:
             elif "新看板，確定要加入我的最愛嗎".encode("big5-uao") in data:
                 self.send("y\r")
                 
-            elif any(view.encode("big5-uao") in data for view in login_views):
+            elif any(view.encode("big5-uao") in data for view in LOGIN_VIEWS):
                 self.send("qq")
         self.unt(self.detect("主功能表", 0), on_data=handle_after_login)
         log.info("enter main menu")
