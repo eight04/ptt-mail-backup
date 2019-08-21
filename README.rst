@@ -1,9 +1,9 @@
 ptt-mail-backup
 ===============
 
-.. image:: https://travis-ci.org/eight04/ptt-mail-backup.svg?branch=master
-    :target: https://travis-ci.org/eight04/ptt-mail-backup
-
+.. image:: https://travis-ci.com/eight04/ptt-mail-backup.svg?branch=master
+    :target: https://travis-ci.com/eight04/ptt-mail-backup
+    
 一個用來備份 PTT 站內信的 CLI 工具。不會再因為站內信打包失敗而把信箱塞爆一整個禮拜。
 
 Features
@@ -74,6 +74,10 @@ The distributed package `includes a branch of pyte <https://github.com/eight04/p
       
 Changelog
 ---------
+
+* 0.2.3 (Aug 21, 2019)
+
+  - Fix: handle login views.
 
 * 0.2.2 (Nov 18, 2018)
 
