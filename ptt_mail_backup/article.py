@@ -1,12 +1,8 @@
-import re
-import collections
 import uao
 
 from .ansi import chars_to_bytes
 
 uao.register_uao()
-
-RX_FOOT = re.compile(r"(?:(\d+)~(\d+)\s*欄.+?)?(\d+)~(\d+)\s*行".encode("big5-uao"))
 
 def is_default(char):
     return not char.bold and char.fg == "default" and char.bg == "default"
@@ -36,33 +32,13 @@ class ArticleScreenLine:
         self.left_truncated = bool(skip_start)
         self.right_truncated = bool(skip_end)
         
-Foot = collections.namedtuple("Foot", ["col_start", "col_end", "line_start", "line_end"])
-        
-def match_foot(s):
-    match = RX_FOOT.search(s)
-    if not match:
-        return None
-    col_start, col_end, line_start, line_end = match.groups()
-    
-    col_start = int(col_start) - 2 if col_start is not None else 0
-    col_end = int(col_end) if col_end is not None else 78
-    line_start = int(line_start) - 1
-    line_end = int(line_end)
-    return Foot(col_start, col_end, line_start, line_end)
-        
 class ArticleScreen:
-    def __init__(self, lines):
-        lines = list(lines)
-        foot = match_foot("".join(c.data for c in lines[-1]).encode("latin-1"))
-        
-        self.line_start = foot.line_start
-        self.line_end = foot.line_end
-        self.col_start = foot.col_start
-        self.col_end = foot.col_end
-        
+    def __init__(self, lines, y, x):
+        self.y = y
+        self.x = x
         self.lines = [
-            ArticleScreenLine(line, line_no, self.col_start)
-            for line_no, line in enumerate(lines[:-1], self.line_start)
+            ArticleScreenLine(line, line_no, self.x)
+            for line_no, line in enumerate(lines, self.y)
         ]
         
 class Article:
@@ -93,9 +69,8 @@ class Article:
         for col_no, char in enumerate(line.chars, line.col_no):
             self.draw_char(line.line_no, col_no, char)
         
-    def add_screen(self, lines, skip_line=None):
-        screen = ArticleScreen(lines)
-        assert screen.line_start <= len(self.lines)
+    def add_screen(self, lines, y, x, skip_line=None):
+        screen = ArticleScreen(lines, y, x)
         for line in screen.lines:
             if skip_line and skip_line(line):
                 continue

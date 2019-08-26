@@ -9,7 +9,7 @@ from paramiko.client import SSHClient, AutoAddPolicy
 
 from .byte_screen import ByteScreen
 from .byte_stream import ByteStream
-from .article import match_foot, Article
+from .article import Article
 
 uao.register_uao()
 
@@ -195,16 +195,19 @@ class PTTBot:
         self.send("o")
         self.unt(self.on_pmore_conf)
         self.send("wmlq")
-        self.unt(self.on_col(0))
+        self.unt(self.in_article())
         
     def on_pmore_conf(self, _data):
         return "piaip's more: pmore 2007+ 設定選項".encode("big5-uao") in self.get_line(-9)
         
-    def on_col(self, col_no):
-        def callback(_data):
-            foot = match_foot(self.get_line(-1))
-            return foot and foot.col_start == col_no
-        return callback
+    def article_refresh(self):
+        self.send("h")
+        self.unt(self.detect("呼叫小天使", -1))
+        self.send("q")
+        self.unt(self.in_article())
+        
+    def in_article(self):
+        return self.detect("瀏覽 第", -1)
         
     def get_article(self, index):
         log.info("get %sth article", index)
@@ -234,56 +237,71 @@ class PTTBot:
                 log.info("skip animation")
                 self.send("n")
                 is_animated = True
-        self.unt(self.on_col(0), on_data=handle_animated)
+        self.unt(self.in_article(), on_data=handle_animated)
         log.info("enter the article. is_animated=%s", is_animated)
         
         if is_animated:
-            self.send("hq")
-            self.unt(self.on_col(0))
-            log.info("refresh animation page")
+            self.article_refresh()
+            log.info("refresh animation page to show ^L code")
             
         if not self.article_configured:
             self.update_article_config()
             
         log.info("start collecting body")
+        y = 0
+        x = 0
         while True:
-            screen = article.add_screen(self.lines(raw=True))
-            log.info("add screen %s~%s", screen.line_start, screen.line_end)
+            screen = article.add_screen([*self.lines(raw=True)][:-1], y, x)
+            log.info("add screen %s~%s", y + 1, y + self.screen.lines - 1)
             
             indent = 0
             while any(line.right_truncated for line in screen.lines):
                 truncated_lines = set(line.line_no for line in screen.lines if line.right_truncated)
             
-                log.info("has truncated right")
-                indent += 1
-                self.send(">")
-                if screen.col_start == 0:
+                log.info("has truncated lines")
+                indent_count = int(self.screen.columns / 8) - 1
+                if x == 0:
                     # the first indent is shorter
-                    next_col = 7
-                else:
-                    next_col = screen.col_start + 8
-                self.unt(self.on_col(next_col))
+                    x -= 1
+                self.send(">" * indent_count)
+                x += 8 * indent_count
+                indent += indent_count
+                self.article_refresh()
                 screen = article.add_screen(
-                    self.lines(raw=True),
+                    [*self.lines(raw=True)][:-1],
+                    y,
+                    x,
                     skip_line=lambda line: line.line_no not in truncated_lines
                 )
-                log.info("move right to col %s", screen.col_start)
-                # if screen.col_start == 136:
-                    # set_trace()
+                log.info("move right to col %s", x)
                 
             log.info("max indent %s", indent)
             if indent:
                 self.send("<" * indent)
-                self.unt(self.on_col(0))
+                self.article_refresh()
                 log.info("back to first col")
+                x = 0
             
             if self.on_last_page():
                 break
                 
-            self.send(" ")
-            self.unt(lambda _data: (
-                self.on_last_page() or self.on_line(screen.line_start + self.screen.lines - 2)
-            ))
+            self.send(":{}\r".format(y + 1 + self.screen.lines - 1))
+            self.article_refresh()
+            if not self.on_last_page():
+                y += self.screen.lines - 1
+                continue
+                
+            # return to y and find how many lines are left
+            self.send(":{}\r".format(y + 1))
+            self.article_refresh()
+                
+            scrolls = 0
+            while not self.on_last_page():
+                self.send("j")
+                self.article_refresh()
+                scrolls += 1
+                
+            y += scrolls
         self.send("q")
         
         log.info("get article success")
@@ -291,7 +309,3 @@ class PTTBot:
     
     def on_last_page(self):
         return RX_LAST_PAGE.search(self.get_line(-1))
-        
-    def on_line(self, line_no):
-        foot = match_foot(self.get_line(-1))
-        return foot and foot.line_start == line_no
