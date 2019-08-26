@@ -259,7 +259,7 @@ class PTTBot:
                 truncated_lines = set(line.line_no for line in screen.lines if line.right_truncated)
             
                 log.info("has truncated lines")
-                indent_count = self.screen.columns / 8 - 1
+                indent_count = int(self.screen.columns / 8) - 1
                 if x == 0:
                     # the first indent is shorter
                     x -= 1
@@ -285,10 +285,10 @@ class PTTBot:
             if self.on_last_page():
                 break
                 
-            self.send(":{}\r".format(y + 1 + self.screen.columns - 1))
+            self.send(":{}\r".format(y + 1 + self.screen.lines - 1))
             self.article_refresh()
             if not self.on_last_page():
-                y += self.screen.columns - 1
+                y += self.screen.lines - 1
                 continue
                 
             # return to y and find how many lines are left
