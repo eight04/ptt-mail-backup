@@ -75,6 +75,11 @@ The distributed package `includes a branch of pyte <https://github.com/eight04/p
 Changelog
 ---------
 
+* 0.3.0 (Aug 26, 2019)
+
+  - Breaking: stop relying on the footer information.
+  - Fix: unable to download articles including ``**s`` or ``**n``.
+
 * 0.2.3 (Aug 21, 2019)
 
   - Fix: handle login views.
