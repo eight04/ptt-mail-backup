@@ -160,13 +160,10 @@ class PTTBot:
         # set_trace()
         self.send("$h")
         last_index = None
-        def on_data(data):
-            nonlocal last_index
-            if "呼叫小天使".encode("big5-uao") in data:
-                no, *_args = parse_board_item(self.get_line(self.screen.cursor.y))
-                last_index = no
-        self.unt("呼叫小天使", on_data=on_data)
+        self.unt("呼叫小天使")
         self.send("q")
+        self.unt("鴻雁往返")
+        last_index, *_args = parse_board_item(self.get_line(self.screen.cursor.y))
         log.info("get last index success: %s", last_index)
         return last_index
         
