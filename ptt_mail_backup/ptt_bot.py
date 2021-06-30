@@ -16,6 +16,10 @@ uao.register_uao()
 log = logging.getLogger(__name__)
 
 RX_LAST_PAGE = re.compile(r"瀏覽.+?\(100%\)".encode("big5-uao"))
+
+# FIXME: only work with old cursor
+RX_HIGHLIGHT_LINE = re.compile(r"\s*●\s*\d+".encode("big5-uao"))
+
 LOGIN_VIEWS = [
     "本週五十大熱門話題",
     "本日十大熱門話題",
@@ -160,13 +164,10 @@ class PTTBot:
         # set_trace()
         self.send("$h")
         last_index = None
-        def on_data(data):
-            nonlocal last_index
-            if "呼叫小天使".encode("big5-uao") in data:
-                no, *_args = parse_board_item(self.get_line(self.screen.cursor.y))
-                last_index = no
-        self.unt("呼叫小天使", on_data=on_data)
+        self.unt("呼叫小天使")
         self.send("q")
+        self.unt("鴻雁往返")
+        last_index, *_args = parse_board_item(self.get_highlight_line())
         log.info("get last index success: %s", last_index)
         return last_index
         
@@ -209,14 +210,20 @@ class PTTBot:
     def in_article(self):
         return self.detect("瀏覽 第", -1)
         
+    def get_highlight_line(self):
+        """Get the line starting with '●'"""
+        for line in self.lines():
+            if RX_HIGHLIGHT_LINE.match(line):
+                return line
+        raise Exception("Failed to find highlight line")
+        
     def get_article(self, index):
         log.info("get %sth article", index)
         self.send(str(index))
         self.unt("跳至第幾項")
         self.send("\r")
         self.unt(self.detect("!跳至第幾項", -1))
-        curr_line = self.get_line(self.screen.cursor.y)
-        _no, date, sender, title = parse_board_item(curr_line)
+        _no, date, sender, title = parse_board_item(self.get_highlight_line())
         
         log.info("title: %s", title)
         
