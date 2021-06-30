@@ -75,6 +75,11 @@ The distributed package `includes a branch of pyte <https://github.com/eight04/p
 Changelog
 ---------
 
+* 0.4.0 (Jun 30, 2021)
+
+  - Bump dependencies
+  - Fix: hang while fetching index
+
 * 0.3.0 (Aug 26, 2019)
 
   - Breaking: stop relying on the footer information.
