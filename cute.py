@@ -1,3 +1,4 @@
+# pylint: disable=import-outside-toplevel
 from xcute import cute, LiveReload
 
 def build():
