@@ -127,10 +127,12 @@ class PTTBot:
         return callback
         
     def unt(self, needle, on_data=None):
+        should_stop = None
         if callable(needle):
             should_stop = needle
         else:
             def should_stop(data, test=needle.encode("big5-uao")):
+                log.debug(f"unt handler: {data!r}")
                 return test in data
                 
         while True:
@@ -164,7 +166,7 @@ class PTTBot:
         # set_trace()
         self.send("$h")
         last_index = None
-        self.unt("呼叫小天使")
+        self.unt(self.detect("呼叫小天使", -1))
         self.send("q")
         self.unt("鴻雁往返")
         last_index, *_args = parse_board_item(self.get_highlight_line())

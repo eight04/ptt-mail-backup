@@ -41,7 +41,7 @@ def main():
         "-d", "--dest", default=".", help="save to dest. Default: %(default)r"
     )
     parser.add_argument(
-        "-v", "--verbose", action="store_true", help="print verbose message."
+        "-v", "--verbose", action="count", help="print verbose message.", default=0
     )
     parser.add_argument(
         "-f", "--filename-format",
@@ -59,7 +59,7 @@ def main():
     args = parser.parse_args()
     
     if args.verbose:
-        logging.basicConfig(level="INFO")
+        logging.basicConfig(level="INFO" if args.verbose < 2 else "DEBUG")
     
     with ptt_login(args.user, args.password) as bot:
         print("Login success, try entering your mail box")
