@@ -75,6 +75,11 @@ The distributed package `includes a branch of pyte <https://github.com/eight04/p
 Changelog
 ---------
 
+* 0.5.0 (Feb 3, 2024)
+
+  - Bump dependencies.
+  - Fix: hang while refreshing screen.
+
 * 0.4.0 (Jun 30, 2021)
 
   - Bump dependencies
