@@ -131,8 +131,8 @@ class PTTBot:
         if callable(needle):
             should_stop = needle
         else:
-            def should_stop(data, test=needle.encode("big5-uao")):
-                log.debug(f"unt handler: {data!r}")
+            def should_stop(data, test=needle.encode("big5-uao")): # pylint: disable=function-redefined
+                log.debug("unt handler: %r", data)
                 return test in data
                 
         while True:
