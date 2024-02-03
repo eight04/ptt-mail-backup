@@ -2,7 +2,7 @@ Pygments==2.17.2
 docutils==0.20.1
 pylint==3.0.3
 pytest==8.0.0
-pyxcute==0.7.0
+pyxcute==0.8.1
 requests==2.31.0
 twine==4.0.2
 wheel==0.42.0
