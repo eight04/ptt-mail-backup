@@ -3,9 +3,13 @@ ignore=pyte
 
 [MESSAGES CONTROL]
 disable=
+  broad-exception-raised,
+  consider-using-f-string,
   design,
   fixme,
   missing-docstring,
+  missing-final-newline,
+  missing-timeout,
   trailing-whitespace,
   # https://github.com/PyCQA/pylint/issues/2175
   wrong-import-order,

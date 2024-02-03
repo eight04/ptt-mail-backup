@@ -8,7 +8,7 @@ def is_default(char):
     return not char.bold and char.fg == "default" and char.bg == "default"
     
 def is_truncated(char):
-    return char.bold and (char.data == "<" or char.data == ">")
+    return char.bold and char.data in {"<", ">"}
     
 class ArticleScreenLine:
     def __init__(self, line, line_no, col_start):
