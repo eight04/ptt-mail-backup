@@ -1,4 +1,5 @@
 Pygments==2.17.2
+build==1.0.3
 docutils==0.20.1
 pylint==3.0.3
 pytest==8.0.0

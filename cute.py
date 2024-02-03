@@ -35,7 +35,7 @@ cute(
     test = ['lint', 'pytest', 'readme_build'],
     bump_pre = ['build', 'test'],
     bump_post = ['dist', 'release', 'publish', 'install'],
-    dist = ['x-clean build dist && python setup.py sdist bdist_wheel'],
+    dist = ['x-clean build dist && python -m build'],
     release = [
         'git add .',
         'git commit -m "Release v{version}"',
