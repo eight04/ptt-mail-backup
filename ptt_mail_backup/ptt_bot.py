@@ -290,6 +290,9 @@ class PTTBot:
                 self.article_refresh()
                 log.info("back to first col")
                 x = 0
+
+            # TODO: progress bar?
+            log.debug(self.get_line(-1))
             
             if self.on_last_page():
                 break
