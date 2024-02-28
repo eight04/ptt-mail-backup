@@ -1,8 +1,8 @@
-from ptt_mail_backup.byte_stream import ByteStream
+from ptt_mail_backup.ptt_bot import PTTBot
 
-def test_pattern():
-    # https://github.com/eight04/ptt-mail-backup/issues/7
-    match = ByteStream._text_pattern.match("\x9d\x9b\\")
-    assert match
-    assert match.group() == "\x9d\x9b\\"
-    
+def test_byte_stream():
+    bot = PTTBot(None)
+    text = "限".encode("big5-uao")
+
+    bot.stream.feed(text)
+    assert bot.dump_screen().strip() == "限"
