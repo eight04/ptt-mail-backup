@@ -6,3 +6,6 @@ def test_byte_stream():
 
     bot.stream.feed(text)
     assert bot.dump_screen().strip() == "限"
+
+    bot.stream.feed(b"\x1b[1;36mFOO")
+    assert bot.dump_screen().strip() == "限FOO"
