@@ -17,6 +17,8 @@ Features
 Installation
 ------------
 
+> NOTE: This package requires python 3.7+
+
 From `PYPI <https://pypi.org/project/ptt-mail-backup/>`__:
 
 ::
