@@ -77,6 +77,12 @@ The distributed package `includes a branch of pyte <https://github.com/eight04/p
 Changelog
 ---------
 
+* 0.6.0 (Feb 28, 2024)
+
+  - Bump dependencies.
+  - Change: require python 3.7+.
+  - Fix: issues with wcwidth 0.2.13.
+
 * 0.5.0 (Feb 3, 2024)
 
   - Bump dependencies.
