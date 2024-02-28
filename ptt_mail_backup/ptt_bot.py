@@ -7,8 +7,7 @@ from getpass import getpass
 import uao
 from paramiko.client import SSHClient, AutoAddPolicy
 
-from .byte_screen import ByteScreen
-from .byte_stream import ByteStream
+from .pyte import ByteScreen, ByteStream
 from .article import Article
 
 uao.register_uao()
@@ -61,7 +60,7 @@ def ptt_login(user=None, password=None):
             except:
                 log.info(
                     "uncaught error, here is the last screen:\n%s",
-                    "\n".join(line.decode("big5-uao").rstrip() for line in bot.lines())
+                    bot.dump_screen()
                 )
                 raise
     
@@ -69,9 +68,14 @@ class PTTBot:
     def __init__(self, channel):
         self.channel = channel
         self.screen = ByteScreen(80, 24)
-        self.stream = ByteStream(self.screen)
+        self.stream = ByteStream(self.screen, use_c1=False)
+        self.stream.select_other_charset("@")
         self.article_configured = False
         self.user = None
+
+    def dump_screen(self):
+        """Dump the current screen"""
+        return "\n".join(line.decode("big5-uao").rstrip() for line in self.lines())
         
     def login(self, user=None, password=None):
         if not user:
@@ -236,7 +240,7 @@ class PTTBot:
         self.unt(self.detect("郵件選單", 0))
         
         article = Article(date, sender, title)
-        
+
         self.send("\r")
         
         is_animated = False
@@ -248,14 +252,14 @@ class PTTBot:
                 is_animated = True
         self.unt(self.in_article(), on_data=handle_animated)
         log.info("enter the article. is_animated=%s", is_animated)
-        
+
         if is_animated:
             self.article_refresh()
             log.info("refresh animation page to show ^L code")
             
         if not self.article_configured:
             self.update_article_config()
-            
+
         log.info("start collecting body")
         y = 0
         x = 0

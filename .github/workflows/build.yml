@@ -1,0 +1,18 @@
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.12"]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -U pip
+      - run: pip install -r requirements-lock.txt || (sed -i 's/=.*//g' requirements.txt && pip install -r requirements.txt)
+      # - run: xargs -a requirements-lock.txt -I % bash -c "pip install % --no-deps" || true
+      - run: python cute.py build
+      - run: pip install .
+      - run: python cute.py test

@@ -7,7 +7,7 @@ def build():
     import shutil
     import requests
     shutil.rmtree("ptt_mail_backup/pyte", ignore_errors=True)
-    r = requests.get("https://github.com/eight04/pyte/archive/dev-blink.zip")
+    r = requests.get("https://github.com/eight04/pyte/archive/dev-byte-screen.zip")
     def includes(name):
         match = re.match(r".+?/(pyte/.+\.py)$", name)
         if match:
