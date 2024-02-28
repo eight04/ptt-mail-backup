@@ -11,7 +11,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install -U pip
-      - run: xargs -a requirements-lock.txt -I % bash -c "pip install % --no-deps" || true
+      - run: pip install -r requirements-lock.txt || (sed -i 's/==.*//g' requirements.txt && pip install -r requirements.txt)
+      # - run: xargs -a requirements-lock.txt -I % bash -c "pip install % --no-deps" || true
       - run: pip install .
       - run: python cute.py build
       - run: python cute.py test
